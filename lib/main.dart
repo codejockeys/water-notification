@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:developer' as dev;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -100,19 +101,22 @@ class _MyHomePageState extends State<MyHomePage> {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
-        showDialog(context: context, builder: (_) {
-          return AlertDialog(
-            title: Text(notification.title!),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        showDialog(
+          context: context,
+          builder: (_) {
+            return AlertDialog(
+              title: Text(notification.title!),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(notification.body!),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        });
+            );
+          },
+        );
       }
     });
   }
@@ -180,15 +184,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   taskController.text,
                   NotificationDetails(
                     android: AndroidNotificationDetails(
-                      channel.id,
-                      channel.name,
-                      channelDescription: channel.description,
-                      importance: Importance.high,
-                      color: Colors.blue,
-                      playSound: true,
-                      icon: '@mipmap/ic_launcher'
-                    ),
-                  )
+                        channel.id, channel.name,
+                        channelDescription: channel.description,
+                        importance: Importance.high,
+                        color: Colors.blue,
+                        playSound: true,
+                        styleInformation: const BigPictureStyleInformation(
+                          DrawableResourceAndroidBitmap("@mipmap/ic_launcher"),
+                          largeIcon: DrawableResourceAndroidBitmap(
+                              "@mipmap/ic_launcher"),
+                          htmlFormatContent: true,
+                          htmlFormatContentTitle: true,
+                        ),
+                        icon: '@mipmap/ic_launcher'),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
