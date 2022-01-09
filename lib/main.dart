@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'dart:developer' as dev;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -51,6 +51,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      debugShowCheckedModeBanner: false,
       home: const MyHomePage(),
     );
   }
@@ -78,10 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
         RemoteNotification? notification = message.notification;
         AndroidNotification? android = message.notification?.android;
         if (notification != null && android != null) {
-          flutterLocalNotificationsPlugin.show(
+          flutterLocalNotificationsPlugin.zonedSchedule(
             notification.hashCode,
             notification.title,
             notification.body,
+            tz.TZDateTime.now(tz.local).add(Duration(seconds: timeValue!)),
             NotificationDetails(
               android: AndroidNotificationDetails(
                 channel.id,
@@ -92,33 +94,38 @@ class _MyHomePageState extends State<MyHomePage> {
                 icon: '@mipmap/ic_launcher',
               ),
             ),
+            androidAllowWhileIdle: true,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
         }
       },
     );
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      dev.log("A new onMessageOpenedApp event was published!");
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-      if (notification != null && android != null) {
-        showDialog(
-          context: context,
-          builder: (_) {
-            return AlertDialog(
-              title: Text(notification.title!),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(notification.body!),
-                  ],
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (RemoteMessage message) {
+        dev.log("A new onMessageOpenedApp event was published!");
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification?.android;
+        if (notification != null && android != null) {
+          showDialog(
+            context: context,
+            builder: (_) {
+              return AlertDialog(
+                title: Text(notification.title!),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(notification.body!),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      }
-    });
+              );
+            },
+          );
+        }
+      },
+    );
   }
 
   @override
@@ -178,10 +185,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: () {
                 dev.log("Request to schedule notification!");
-                flutterLocalNotificationsPlugin.show(
-                  0,
+
+                flutterLocalNotificationsPlugin.zonedSchedule(
+                  0, //do not change this value
                   "Water Notification",
                   taskController.text,
+                  tz.TZDateTime.now(tz.local).add(
+                    Duration(seconds: timeValue!),
+                  ),
                   NotificationDetails(
                     android: AndroidNotificationDetails(
                         channel.id, channel.name,
@@ -198,6 +209,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         icon: '@mipmap/ic_launcher'),
                   ),
+                  androidAllowWhileIdle: true,
+                  uiLocalNotificationDateInterpretation:
+                      UILocalNotificationDateInterpretation.absoluteTime,
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -214,6 +228,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: () {
                 dev.log("Request to cancel schedule notification!");
+                flutterLocalNotificationsPlugin.cancel(0);
               },
               style: ElevatedButton.styleFrom(
                 primary: Colors.red,
