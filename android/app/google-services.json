@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "387819940845",
+    "project_id": "water-notification-app-1",
+    "storage_bucket": "water-notification-app-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387819940845:android:3166c0e972353655f315e4",
+        "android_client_info": {
+          "package_name": "com.example.comp205_lab_new"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "387819940845-r9h60nfllps91of86ieuop2pqqvi32vi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABWYxzsxrlK5YLvvdnmP8of18UbMgBHnU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387819940845-r9h60nfllps91of86ieuop2pqqvi32vi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
