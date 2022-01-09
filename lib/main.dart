@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 import 'dart:developer' as dev;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -25,7 +26,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
+  tz.initializeTimeZones();
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -67,13 +68,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController taskController = TextEditingController();
   final selectItems = ['Seconds', 'Minutes', 'Hours'];
-  String? selectionValue;
-  final timeItems = [5, 10, 15, 20];
-  int? timeValue;
+  String selectionValue = 'Seconds';
+  final timeItems = [1, 5, 10, 15, 20];
+  int timeValue = 1;
+
 
   @override
   void initState() {
     super.initState();
+    int inSeconds = 1;
+    if (selectionValue == 'Minutes') {
+      inSeconds = timeValue * 60;
+    }
+    if (selectionValue == 'Hours') {
+      inSeconds = timeValue * 3600;
+    }
     FirebaseMessaging.onMessage.listen(
       (RemoteMessage message) {
         RemoteNotification? notification = message.notification;
@@ -83,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
             notification.hashCode,
             notification.title,
             notification.body,
-            tz.TZDateTime.now(tz.local).add(Duration(seconds: timeValue!)),
+            tz.TZDateTime.now(tz.local).add(Duration(seconds: inSeconds)),
             NotificationDetails(
               android: AndroidNotificationDetails(
                 channel.id,
@@ -101,35 +110,17 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       },
     );
-    FirebaseMessaging.onMessageOpenedApp.listen(
-      (RemoteMessage message) {
-        dev.log("A new onMessageOpenedApp event was published!");
-        RemoteNotification? notification = message.notification;
-        AndroidNotification? android = message.notification?.android;
-        if (notification != null && android != null) {
-          showDialog(
-            context: context,
-            builder: (_) {
-              return AlertDialog(
-                title: Text(notification.title!),
-                content: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(notification.body!),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        }
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    int inSeconds = 1;
+    if (selectionValue == 'Minutes') {
+      inSeconds = timeValue * 60;
+    }
+    if (selectionValue == 'Hours') {
+      inSeconds = timeValue * 3600;
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text("Water Notifications"),
@@ -153,12 +144,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Row(
                 children: [
                   DropdownButton<String>(
-                    enableFeedback: true,
+                    hint: const Text("type"),
                     value: selectionValue,
                     items: selectItems.map(buildSelectionItem).toList(),
                     onChanged: (value) => setState(
                       () {
-                        selectionValue = value;
+                        selectionValue = value!;
                         dev.log("Selection: $selectionValue");
                       },
                     ),
@@ -168,10 +159,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   DropdownButton<int>(
                     value: timeValue,
+                    hint: const Text("time"),
                     items: timeItems.map(buildTimeItem).toList(),
                     onChanged: (value) => setState(
                       () {
-                        timeValue = value;
+                        timeValue = value!;
                         dev.log("Time delay: $timeValue");
                       },
                     ),
@@ -191,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   "Water Notification",
                   taskController.text,
                   tz.TZDateTime.now(tz.local).add(
-                    Duration(seconds: timeValue!),
+                    Duration(seconds: inSeconds),
                   ),
                   NotificationDetails(
                     android: AndroidNotificationDetails(
